@@ -5,8 +5,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from bson import ObjectId
 from typing import List
 from datetime import datetime, timedelta
+from pydantic import BaseModel
 
-from database import transactions_collection, client, users_collection
+from database import transactions_collection, client, users_collection, switch_to_fallback_client
 from models import TransactionCreate, TransactionDB, AIInsight, UserCreate, Token, GoogleLogin
 from auth import get_current_user, verify_password, get_password_hash, create_access_token, create_refresh_token
 import jwt
@@ -29,6 +30,12 @@ async def lifespan(app: FastAPI):
         print("✅ Successfully connected to MongoDB!")
     except Exception as e:
         print("❌ Failed to connect to MongoDB. Is MongoDB running?", e)
+        if switch_to_fallback_client():
+            try:
+                await client.admin.command('ping')
+                print("✅ Connected to fallback local MongoDB instance.")
+            except Exception as fallback_error:
+                print("❌ Fallback MongoDB connection also failed.", fallback_error)
     yield
     # Shutdown logic can go here if needed
 

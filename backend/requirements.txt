@@ -5,6 +5,8 @@ pymongo
 python-dotenv
 bcrypt
 PyJWT
+firebase-admin
+python-multipart
 slowapi
 networkx
 google-genai
