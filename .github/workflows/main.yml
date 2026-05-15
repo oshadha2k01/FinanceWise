@@ -75,13 +75,17 @@ jobs:
         run: |
           cd frontend
           set -eux
-          # Try to install while omitting optional native deps (works around npm optional-binding bug)
-          npm ci --omit=optional --no-audit || (
-            echo "npm ci failed; cleaning up and trying npm install without optional deps"
+          # Prefer a clean install that preserves package-lock (fast and reproducible)
+          if npm ci --loglevel=warn; then
+            echo "npm ci succeeded"
+          else
+            echo "npm ci failed; cleaning and falling back to npm install (no optional)"
             rm -rf node_modules package-lock.json
-            npm install --no-optional --no-audit
-          )
-          npm run build --if-present --loglevel verbose
+            npm install --no-optional --loglevel=warn
+          fi
+          # Rebuild native binaries (rollup, etc.) to ensure platform-specific addons are present
+          npm rebuild --update-binary || true
+          npm run build --if-present --loglevel=verbose
 
   deploy:
     needs: [test-backend, build-frontend]
