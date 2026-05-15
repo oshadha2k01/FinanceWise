@@ -51,6 +51,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get("/")
+async def root():
+    return {"status": "ok"}
+
 class RefreshTokenRequest(BaseModel):
     refresh_token: str
 
