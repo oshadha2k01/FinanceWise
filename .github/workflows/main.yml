@@ -74,7 +74,13 @@ jobs:
           # GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
           cd frontend
-          npm ci --no-audit --silent
+          set -eux
+          # Try to install while omitting optional native deps (works around npm optional-binding bug)
+          npm ci --omit=optional --no-audit || (
+            echo "npm ci failed; cleaning up and trying npm install without optional deps"
+            rm -rf node_modules package-lock.json
+            npm install --no-optional --no-audit
+          )
           npm run build --if-present --loglevel verbose
 
   deploy:
